@@ -1,23 +1,62 @@
-import type { Component } from 'solid-js';
+import { Component, Show, For, createContext, useContext, splitProps, mergeProps } from 'solid-js';
 
-export const Grid: Component<{rows: number, columns: number}> = (props) => {
+export function createGrid() {
 
-  //https://windicss.org/utilities/layout/grid.html#grid-1
-  
-  const style = () => ({
-    display: 'grid',
-    gridTemplateColumns: `repeat(${props.columns}, 1fr)`,
-    gridTemplateRows: `repeat(${props.rows}, 1fr)`,
-  })
+  const GridContext = createContext<{ rows: number, cols: number }>({ rows: 10, cols: 10 });
 
-  return <div class={`w-full h-full`} style={style()}>
-    {props.children}
-  </div>
-}
+  const cellSize = 100;
 
-export const GridItem: Component<{row: number, column: number}> = (props) => {
+  const SvgGrid: Component<{ rows: number, cols: number, gridLines?: boolean, gridColor?: string }> = (props) => {
 
-  return <div class={`row-start-${props.row} col-start-${props.column}`}>
-    {props.children}
-  </div>
+    const vbWidth = () => props.cols * cellSize;
+    const vbHeight = () => props.rows * cellSize;
+
+    const viewBox = () => `0 0 ${vbWidth()} ${vbHeight()}`
+
+    const colLines = () => Array.from({ length: props.cols - 1 }, (_, i) => (i + 1) * cellSize);
+    const rowLines = () => Array.from({ length: props.rows - 1 }, (_, i) => (i + 1) * cellSize);
+
+    const stroke = () => props.gridColor || '#ccc';
+
+    const [contextData] = splitProps(props, ["rows", "cols"]);
+
+    return (
+      <GridContext.Provider value={contextData}>
+        <svg class="w-full border" viewBox={viewBox()}>
+          <Show when={props.gridLines}>
+            <For each={colLines()}>
+              {(x) => <line x1={x} y1="0" x2={x} y2={vbHeight()} stroke-width={1} stroke={stroke()} />}
+            </For>
+            <For each={rowLines()}>
+              {(y) => <line x1={0} y1={y} x2={vbWidth()} y2={y} stroke-width={1} stroke={stroke()} />}
+            </For>
+          </Show>
+          {props.children}
+        </svg>
+      </GridContext.Provider>
+    )
+  }
+
+  const GridItem: Component<{x: number, y: number, width?: number, height?: number, border?: boolean, text?: string}> = (props) => {
+    const contextData  = useContext(GridContext);
+
+    props = mergeProps({width: 1, height: 1}, props);
+
+    const width = () => props.width * cellSize;
+    const height = () => props.height * cellSize;
+    const clampedX = () => Math.min(Math.max(0, props.x), contextData.cols - 1) * cellSize; 
+    const clampedY = () => Math.min(Math.max(0, props.y), contextData.rows - 1) * cellSize;
+
+    return (
+      <svg x={clampedX()} y={clampedY()} 
+           width={width()} height={height()}>
+           viewBox={`0 0 ${width()} ${height()}`}>
+          {props.border && <rect stroke-width="1" stroke="black" fill="none" width={width()} height={height()} x="0" y="0"></rect>}
+          {props.text && <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle">{props.text}</text>}
+          {props.children}
+      </svg>
+    )
+  }
+
+  return { SvgGrid, GridItem }
 }
