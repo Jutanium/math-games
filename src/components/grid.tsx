@@ -67,7 +67,7 @@ export function createGrid() {
            viewBox={`0 0 ${width()} ${height()}`}
            {...events}
            >
-          {props.border && <rect stroke-width="1" stroke="black" fill="none" width={width()} height={height()} x="0" y="0"></rect>}
+          <rect stroke-width="1" stroke={props.border && "black"} fill="white" fill-opacity="0" width={width()} height={height()} x="0" y="0"></rect>
           {props.text && <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle">{props.text}</text>}
           {props.children}
       </svg>
