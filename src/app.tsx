@@ -20,8 +20,8 @@ const App: Component = () => {
             </Link>
           </li>
           <li class="py-2 px-4">
-            <Link href="/game" class="no-underline hover:underline">
-              Game
+            <Link href="/frogs" class="no-underline hover:underline">
+              Frogs & Toads
             </Link>
           </li>
           <li class="text-sm flex items-center space-x-1 ml-auto">

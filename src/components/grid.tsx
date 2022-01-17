@@ -1,4 +1,6 @@
-import { Component, Show, For, createContext, useContext, splitProps, mergeProps } from 'solid-js';
+import { Component, Show, For, createContext, useContext, splitProps, mergeProps, JSX, createEffect} from 'solid-js';
+
+type SVGEvents = Omit<JSX.DOMAttributes<SVGElement>, "children" | "innerHTML" | "textContent" | "innerText" | "ref">
 
 export function createGrid() {
 
@@ -37,7 +39,16 @@ export function createGrid() {
     )
   }
 
-  const GridItem: Component<{x: number, y: number, width?: number, height?: number, border?: boolean, text?: string}> = (props) => {
+  type GridItemProps = {
+      x: number, y: number, 
+      width?: number, height?: number, 
+      border?: boolean, text?: string,
+  }
+
+
+  const GridItem: Component<
+     GridItemProps & SVGEvents> = (props) => {
+
     const contextData  = useContext(GridContext);
 
     props = mergeProps({width: 1, height: 1}, props);
@@ -47,10 +58,15 @@ export function createGrid() {
     const clampedX = () => Math.min(Math.max(0, props.x), contextData.cols - 1) * cellSize; 
     const clampedY = () => Math.min(Math.max(0, props.y), contextData.rows - 1) * cellSize;
 
+    const [_, events] = splitProps(props, ["x", "y", "width", "height", "border", "text"]);
+
+
     return (
       <svg x={clampedX()} y={clampedY()} 
-           width={width()} height={height()}>
-           viewBox={`0 0 ${width()} ${height()}`}>
+           width={width()} height={height()}
+           viewBox={`0 0 ${width()} ${height()}`}
+           {...events}
+           >
           {props.border && <rect stroke-width="1" stroke="black" fill="none" width={width()} height={height()} x="0" y="0"></rect>}
           {props.text && <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle">{props.text}</text>}
           {props.children}
